@@ -53,7 +53,8 @@ class Sphere {
     this.faceColors = [];
     this.subdivisionLevel = 2;
     this.radius = 200;
-    this.zoom = 1;
+    this.zoom = 1.5;
+    this.autoRotationSpeed = -0.005;
     this.rotationX = 0;
     this.rotationY = 0;
     this.rotationSpeedX = 0;
@@ -177,6 +178,8 @@ class Sphere {
   }
 
   updateRotation() {
+    this.rotationY += this.autoRotationSpeed;
+
     if (!this.isDragging) {
       this.rotationY += this.rotationSpeedY;
       this.rotationX += this.rotationSpeedX;
@@ -281,7 +284,7 @@ function setup() {
   subdivisionSlider.position(10, height + 10);
   subdivisionSlider.style("width", "200px");
 
-  zoomSlider = createSlider(0.5, 2, 1, 0.1);
+  zoomSlider = createSlider(0.5, 3, sphere.zoom, 0.01); // More precise zoom control
   zoomSlider.position(10, height + 40);
   zoomSlider.style("width", "200px");
 
@@ -290,6 +293,7 @@ function setup() {
   strokeThicknessSlider.style("width", "200px");
 
   sphere.generate();
+  logCurrentState();
 }
 
 function draw() {
@@ -298,6 +302,7 @@ function draw() {
   if (sphere.subdivisionLevel !== subdivisionSlider.value()) {
     sphere.subdivisionLevel = subdivisionSlider.value();
     sphere.generate();
+    logCurrentState();
   }
 
   sphere.zoom = zoomSlider.value();
@@ -322,6 +327,19 @@ function mouseDragged() {
   sphere.mouseDragged();
 }
 
+function logCurrentState() {
+  console.log(
+    "Current Pattern:",
+    sphere.patterns[sphere.currentPatternIndex].name
+  );
+  console.log("Current Theme:", themes[currentThemeIndex].name);
+  console.log("Subdivision Level:", sphere.subdivisionLevel);
+  console.log("Zoom Level:", sphere.zoom.toFixed(2));
+  console.log("Stroke:", strokeOn ? "On" : "Off");
+  console.log("Stroke Mode:", strokeMode);
+  console.log("Stroke Thickness:", strokeThickness.toFixed(2));
+}
+
 function keyPressed() {
   if (key === "x" || key === "X") {
     sphere.nextPattern();
@@ -337,14 +355,5 @@ function keyPressed() {
       updateThemeStrokeColor();
     }
   }
-
-  console.log(
-    "Current Pattern:",
-    sphere.patterns[sphere.currentPatternIndex].name
-  );
-  console.log("Current Theme:", themes[currentThemeIndex].name);
-  console.log("Subdivision Level:", sphere.subdivisionLevel);
-  console.log("Stroke:", strokeOn ? "On" : "Off");
-  console.log("Stroke Mode:", strokeMode);
-  console.log("Stroke Thickness:", strokeThickness);
+  logCurrentState();
 }
