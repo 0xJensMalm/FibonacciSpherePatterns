@@ -1,9 +1,14 @@
 let sphere;
-let currentThemeIndex = 0;
-let subdivisionSlider, zoomSlider;
+let currentThemeIndex;
+let subdivisionSlider, zoomSlider, strokeThicknessSlider;
+
+let strokeOn;
+let strokeMode;
+let strokeThickness;
+let themeStrokeColor;
 
 const DRAG_SENSITIVITY = 0.005;
-const ROTATION_DECAY = 0.1;
+const ROTATION_DECAY = 1;
 const MIN_ROTATION_SPEED = 0.001;
 
 const themes = [
@@ -148,7 +153,17 @@ class Sphere {
     rotateX(this.rotationX);
     rotateY(this.rotationY);
 
-    noStroke();
+    if (strokeOn) {
+      strokeWeight(strokeThickness);
+      if (strokeMode === "black") {
+        stroke(0);
+      } else {
+        stroke(themeStrokeColor);
+      }
+    } else {
+      noStroke();
+    }
+
     for (let i = 0; i < this.faces.length; i++) {
       fill(this.faceColors[i]);
       beginShape();
@@ -253,15 +268,26 @@ class GroupedCyclePattern extends Pattern {
 function setup() {
   createCanvas(1000, 1000, WEBGL);
 
+  // Random initialization
+  currentThemeIndex = floor(random(themes.length));
+  strokeOn = random() > 0.5;
+  strokeMode = random() > 0.5 ? "black" : "theme";
+  strokeThickness = random(1, 5);
+  updateThemeStrokeColor();
+
   sphere = new Sphere();
 
-  subdivisionSlider = createSlider(0, 5, 2, 1);
+  subdivisionSlider = createSlider(0, 5, sphere.subdivisionLevel, 1);
   subdivisionSlider.position(10, height + 10);
   subdivisionSlider.style("width", "200px");
 
   zoomSlider = createSlider(0.5, 2, 1, 0.1);
   zoomSlider.position(10, height + 40);
   zoomSlider.style("width", "200px");
+
+  strokeThicknessSlider = createSlider(1, 5, strokeThickness, 0.5);
+  strokeThicknessSlider.position(10, height + 70);
+  strokeThicknessSlider.style("width", "200px");
 
   sphere.generate();
 }
@@ -275,8 +301,13 @@ function draw() {
   }
 
   sphere.zoom = zoomSlider.value();
+  strokeThickness = strokeThicknessSlider.value();
   sphere.updateRotation();
   sphere.draw();
+}
+
+function updateThemeStrokeColor() {
+  themeStrokeColor = color(random(themes[currentThemeIndex].colors));
 }
 
 function mousePressed() {
@@ -296,12 +327,24 @@ function keyPressed() {
     sphere.nextPattern();
   } else if (key === "c" || key === "C") {
     currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+    updateThemeStrokeColor();
     sphere.applyCurrentPattern();
+  } else if (key === "s" || key === "S") {
+    strokeOn = !strokeOn;
+  } else if (key === "d" || key === "D") {
+    strokeMode = strokeMode === "black" ? "theme" : "black";
+    if (strokeMode === "theme") {
+      updateThemeStrokeColor();
+    }
   }
+
   console.log(
     "Current Pattern:",
     sphere.patterns[sphere.currentPatternIndex].name
   );
   console.log("Current Theme:", themes[currentThemeIndex].name);
   console.log("Subdivision Level:", sphere.subdivisionLevel);
+  console.log("Stroke:", strokeOn ? "On" : "Off");
+  console.log("Stroke Mode:", strokeMode);
+  console.log("Stroke Thickness:", strokeThickness);
 }
